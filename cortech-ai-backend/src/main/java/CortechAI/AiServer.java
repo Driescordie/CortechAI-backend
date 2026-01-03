@@ -1,14 +1,14 @@
 package CortechAI;
 
-
 import static spark.Spark.*;
 
 public class AiServer {
 
     public static void main(String[] args) {
 
-        // Start server op poort 8080 (Render gebruikt deze)
-        port(10000);
+        // Render geeft de poort via de environment variable PORT
+        int portNumber = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
+        port(portNumber);
 
         AiKlasse ai = new AiKlasse();
 
@@ -27,8 +27,6 @@ public class AiServer {
             return "{ \"answer\": \"" + antwoord.replace("\"", "\\\"") + "\" }";
         });
 
-        System.out.println("Cortech AI Server draait op /api/chat");
+        System.out.println("Cortech AI Server draait op poort " + portNumber + " op /api/chat");
     }
 }
-
-
