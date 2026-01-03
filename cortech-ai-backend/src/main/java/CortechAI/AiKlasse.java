@@ -26,15 +26,27 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
-        // JSON-body volgens nieuwe Responses API
+        // System prompt toevoegen zodat de bot praktische computerhulp geeft
         String json = """
                 {
                     "model": "gpt-4o-mini",
                     "input": [
                         {
+                            "role": "system",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt. Geef altijd praktische en duidelijke oplossingen."
+                                }
+                            ]
+                        },
+                        {
                             "role": "user",
                             "content": [
-                                {"type": "text", "text": "%s"}
+                                {
+                                    "type": "text",
+                                    "text": "%s"
+                                }
                             ]
                         }
                     ]
@@ -51,12 +63,11 @@ public class AiKlasse {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // Optioneel: debug
+        // Optioneel debug
         // System.out.println("RAW RESPONSE: " + response.body());
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // Check of er output is
         if (!root.has("output")) {
             return "OpenAI gaf geen output terug: " + response.body();
         }
@@ -72,7 +83,6 @@ public class AiKlasse {
             return "OpenAI gaf een lege content terug.";
         }
 
-        // Pak de tekst uit het eerste content-item
         JsonObject contentItem = contentArray.get(0).getAsJsonObject();
         if (!contentItem.has("text")) {
             return "Geen tekst gevonden in content: " + contentItem.toString();
