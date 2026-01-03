@@ -8,11 +8,8 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Kopieer ALLE jars uit target
-COPY --from=build /app/target/*.jar /app/
-
-# Zoek de shaded jar en hernoem hem naar app.jar
-RUN JAR_FILE=$(ls /app | grep shaded | head -n 1) && mv "/app/$JAR_FILE" /app/app.jar
+# Kopieer de shaded jar expliciet
+COPY --from=build /app/target/*-shaded.jar /app/app.jar
 
 EXPOSE 10000
 CMD ["java", "-jar", "app.jar"]
