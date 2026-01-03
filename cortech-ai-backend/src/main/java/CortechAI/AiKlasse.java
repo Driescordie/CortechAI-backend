@@ -29,27 +29,27 @@ public class AiKlasse {
         // System prompt toevoegen zodat de bot praktische computerhulp geeft
         String json = """
                 {
-                    "model": "gpt-4o-mini",
-                    "input": [
+                  "model": "gpt-4o-mini",
+                  "input": [
+                    {
+                      "role": "system",
+                      "content": [
                         {
-                            "role": "system",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt. Geef altijd praktische en duidelijke oplossingen."
-                                }
-                            ]
-                        },
-                        {
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": "%s"
-                                }
-                            ]
+                          "type": "input_text",
+                          "text": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt. Geef altijd praktische en duidelijke oplossingen."
                         }
-                    ]
+                      ]
+                    },
+                    {
+                      "role": "user",
+                      "content": [
+                        {
+                          "type": "input_text",
+                          "text": "%s"
+                        }
+                      ]
+                    }
+                  ]
                 }
                 """.formatted(message);
 
