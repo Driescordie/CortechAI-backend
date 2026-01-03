@@ -26,11 +26,18 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
-        // Nieuw OpenAI Responses-formaat
+        // JSON-body volgens nieuwe Responses API
         String json = """
                 {
                     "model": "gpt-4o-mini",
-                    "input": "%s"
+                    "input": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": "%s"}
+                            ]
+                        }
+                    ]
                 }
                 """.formatted(message);
 
@@ -44,22 +51,34 @@ public class AiKlasse {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // Debug (optioneel)
+        // Optioneel: debug
         // System.out.println("RAW RESPONSE: " + response.body());
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // Check of OpenAI output teruggeeft
-        if (!root.has("output_text")) {
+        // Check of er output is
+        if (!root.has("output")) {
             return "OpenAI gaf geen output terug: " + response.body();
         }
 
-        JsonArray outputArray = root.getAsJsonArray("output_text");
-        if (outputArray == null || outputArray.isEmpty()) {
+        JsonArray outputArray = root.getAsJsonArray("output");
+        if (outputArray.size() == 0) {
             return "OpenAI gaf een lege output terug.";
         }
 
-        return outputArray.get(0).getAsString();
+        JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
+        JsonArray contentArray = firstMessage.getAsJsonArray("content");
+        if (contentArray.size() == 0) {
+            return "OpenAI gaf een lege content terug.";
+        }
+
+        // Pak de tekst uit het eerste content-item
+        JsonObject contentItem = contentArray.get(0).getAsJsonObject();
+        if (!contentItem.has("text")) {
+            return "Geen tekst gevonden in content: " + contentItem.toString();
+        }
+
+        return contentItem.get("text").getAsString();
     }
 
     public static void main(String[] args) throws Exception {
