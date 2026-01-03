@@ -8,7 +8,7 @@ public class AiServer {
     public static void main(String[] args) {
 
         // Start server op poort 8080 (Render gebruikt deze)
-        port(8080);
+        port(10000);
 
         AiKlasse ai = new AiKlasse();
 
@@ -30,4 +30,5 @@ public class AiServer {
         System.out.println("Cortech AI Server draait op /api/chat");
     }
 }
+
 
