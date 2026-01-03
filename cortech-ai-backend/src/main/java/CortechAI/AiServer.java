@@ -8,7 +8,8 @@ public class AiServer {
 
     public static void main(String[] args) {
 
-        int portNumber = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
+        // Render geeft PORT mee, lokaal gebruiken we 10000
+        int portNumber = Integer.parseInt(System.getenv().getOrDefault("PORT", "10000"));
         port(portNumber);
 
         // CORS
@@ -44,7 +45,6 @@ public class AiServer {
 
             String antwoord;
             try {
-                // Eventueel hier timeout handling toevoegen als AI lang duurt
                 antwoord = ai.sendMessage(vraag);
                 if (antwoord == null || antwoord.isBlank()) antwoord = "Sorry, ik weet hier geen antwoord op.";
                 System.out.println("[OUT] Antwoord: " + antwoord);
