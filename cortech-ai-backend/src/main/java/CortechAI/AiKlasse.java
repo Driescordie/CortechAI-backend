@@ -22,8 +22,8 @@ public class AiKlasse {
         this.client = HttpClient.newHttpClient();
     }
 
+    // Functie die een bericht naar de AI stuurt en het antwoord teruggeeft
     public String sendMessage(String message) throws Exception {
-
         String json = """
                 {
                   "model": "gpt-4o-mini",
@@ -57,44 +57,43 @@ public class AiKlasse {
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
-        HttpResponse<String> response =
-                client.send(request, HttpResponse.BodyHandlers.ofString());
-
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        try {
-            JsonArray outputArray = root.getAsJsonArray("output");
-            if (outputArray.size() == 0) return "(Geen antwoord ontvangen van de AI.)";
-
-            JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
-            JsonArray contentArray = firstMessage.getAsJsonArray("content");
-            if (contentArray.size() == 0) return "(Geen antwoord ontvangen van de AI.)";
-
-            JsonObject contentItem = contentArray.get(0).getAsJsonObject();
-
-            // Correcte key: "text" of "output_text"
-            if (contentItem.has("text")) return contentItem.get("text").getAsString();
-            if (contentItem.has("output_text")) return contentItem.get("output_text").getAsString();
-
-            return "(Geen tekst ontvangen van de AI.)";
-
-        } catch (Exception e) {
-            return "(Fout bij uitlezen van AI-antwoord, maar chat blijft werken.)";
+        // Robust lezen van output
+        if (!root.has("output") || root.getAsJsonArray("output").size() == 0) {
+            return "(Geen antwoord ontvangen van de AI.)";
         }
+
+        JsonArray outputArray = root.getAsJsonArray("output");
+        JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
+        if (!firstMessage.has("content") || firstMessage.getAsJsonArray("content").size() == 0) {
+            return "(Geen antwoord ontvangen van de AI.)";
+        }
+
+        JsonArray contentArray = firstMessage.getAsJsonArray("content");
+        StringBuilder fullText = new StringBuilder();
+        for (int i = 0; i < contentArray.size(); i++) {
+            JsonObject contentItem = contentArray.get(i).getAsJsonObject();
+            if (contentItem.has("text")) {
+                fullText.append(contentItem.get("text").getAsString());
+                if (i < contentArray.size() - 1) fullText.append("\n");
+            }
+        }
+
+        return fullText.toString();
     }
 
-    // Test main voor console
+    // Voor console testing
     public static void main(String[] args) throws Exception {
         AiKlasse ai = new AiKlasse();
         java.util.Scanner scanner = new java.util.Scanner(System.in);
-
         System.out.println("Cortech AI gestart. Typ 'stop' om te stoppen.");
 
         while (true) {
             System.out.print("\nJij: ");
             String vraag = scanner.nextLine();
             if (vraag.equalsIgnoreCase("stop")) break;
-
             try {
                 String antwoord = ai.sendMessage(vraag);
                 System.out.println("Cortech: " + antwoord);
@@ -102,7 +101,6 @@ public class AiKlasse {
                 System.out.println("Er ging iets mis: " + e.getMessage());
             }
         }
-
         scanner.close();
     }
 }
