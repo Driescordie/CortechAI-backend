@@ -8,33 +8,26 @@ public class AiServer {
 
     public static void main(String[] args) {
 
-        // Render geeft de poort via de environment variable PORT
         int portNumber = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
         port(portNumber);
 
-        // ✅ CORS setup (HEEL BELANGRIJK voor frontend)
+        // CORS
         options("/*", (request, response) -> {
             String headers = request.headers("Access-Control-Request-Headers");
-            if (headers != null) {
-                response.header("Access-Control-Allow-Headers", headers);
-            }
-
+            if (headers != null) response.header("Access-Control-Allow-Headers", headers);
             String method = request.headers("Access-Control-Request-Method");
-            if (method != null) {
-                response.header("Access-Control-Allow-Methods", method);
-            }
+            if (method != null) response.header("Access-Control-Allow-Methods", method);
             return "OK";
         });
 
-        before((request, response) -> {
-            response.header("Access-Control-Allow-Origin", "*");
-            response.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-            response.header("Access-Control-Allow-Headers", "Content-Type");
+        before((req, res) -> {
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+            res.header("Access-Control-Allow-Headers", "Content-Type");
         });
 
         AiKlasse ai = new AiKlasse();
 
-        // ✅ Chat endpoint
         post("/api/chat", (req, res) -> {
             res.type("application/json");
 
@@ -47,10 +40,16 @@ public class AiServer {
                 return "{ \"error\": \"Ongeldig request body\" }";
             }
 
+            System.out.println("[IN] Vraag: " + vraag);
+
             String antwoord;
             try {
+                // Eventueel hier timeout handling toevoegen als AI lang duurt
                 antwoord = ai.sendMessage(vraag);
+                if (antwoord == null || antwoord.isBlank()) antwoord = "Sorry, ik weet hier geen antwoord op.";
+                System.out.println("[OUT] Antwoord: " + antwoord);
             } catch (Exception e) {
+                e.printStackTrace();
                 res.status(500);
                 return "{ \"error\": \"AI error\" }";
             }
@@ -58,7 +57,6 @@ public class AiServer {
             return "{ \"answer\": \"" + antwoord.replace("\"", "\\\"") + "\" }";
         });
 
-        // (optioneel maar handig)
         get("/", (req, res) -> "Cortech AI backend draait ✅");
 
         System.out.println("Cortech AI Server draait op poort " + portNumber);
