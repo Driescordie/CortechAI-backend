@@ -1,5 +1,6 @@
 package CortechAI;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -25,17 +26,18 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
+        // Nieuw OpenAI JSON-formaat
         String json = """
                 {
                     "model": "gpt-4o-mini",
                     "messages": [
-                        {"role": "user", "content": "%s"}
+                        { "role": "user", "content": "%s" }
                     ]
                 }
                 """.formatted(message);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.openai.com/v1/chat/completions"))
+                .uri(URI.create("https://api.openai.com/v1/responses"))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
@@ -44,15 +46,18 @@ public class AiKlasse {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // JSON parsen → alleen de tekst teruggeven
-        JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
-        String content = root
-                .getAsJsonArray("choices")
-                .get(0).getAsJsonObject()
-                .getAsJsonObject("message")
-                .get("content").getAsString();
+        // Debug (optioneel)
+        // System.out.println("RAW RESPONSE: " + response.body());
 
-        return content;
+        JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
+
+        // Nieuwe OpenAI output structuur
+        JsonArray outputArray = root.getAsJsonArray("output_text");
+        if (outputArray == null || outputArray.isEmpty()) {
+            return "Fout: geen output ontvangen van OpenAI.";
+        }
+
+        return outputArray.get(0).getAsString();
     }
 
     public static void main(String[] args) throws Exception {
@@ -71,8 +76,12 @@ public class AiKlasse {
                 break;
             }
 
-            String antwoord = ai.sendMessage(vraag);
-            System.out.println("Cortech: " + antwoord);
+            try {
+                String antwoord = ai.sendMessage(vraag);
+                System.out.println("Cortech: " + antwoord);
+            } catch (Exception e) {
+                System.out.println("Er ging iets mis: " + e.getMessage());
+            }
         }
 
         scanner.close();
