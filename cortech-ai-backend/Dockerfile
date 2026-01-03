@@ -8,8 +8,7 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Kopieer de shaded jar expliciet
-COPY --from=build /app/target/*-shaded.jar /app/app.jar
+COPY --from=build /app/target/cortech-ai-backend-1.0.0-shaded.jar app.jar
 
 EXPOSE 10000
 CMD ["java", "-jar", "app.jar"]
