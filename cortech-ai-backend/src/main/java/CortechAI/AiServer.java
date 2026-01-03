@@ -8,11 +8,11 @@ public class AiServer {
 
     public static void main(String[] args) {
 
-        // Render geeft PORT mee, lokaal gebruiken we 10000
+        // Poort instellen (Render geeft PORT, lokaal gebruik 10000)
         int portNumber = Integer.parseInt(System.getenv().getOrDefault("PORT", "10000"));
         port(portNumber);
 
-        // CORS
+        // CORS instellen
         options("/*", (request, response) -> {
             String headers = request.headers("Access-Control-Request-Headers");
             if (headers != null) response.header("Access-Control-Allow-Headers", headers);
@@ -27,8 +27,10 @@ public class AiServer {
             res.header("Access-Control-Allow-Headers", "Content-Type");
         });
 
+        // Instantie van de AI
         AiKlasse ai = new AiKlasse();
 
+        // Endpoint voor chat
         post("/api/chat", (req, res) -> {
             res.type("application/json");
 
@@ -38,7 +40,9 @@ public class AiServer {
                 vraag = json.get("message").getAsString();
             } catch (Exception e) {
                 res.status(400);
-                return "{ \"error\": \"Ongeldig request body\" }";
+                JsonObject error = new JsonObject();
+                error.addProperty("error", "Ongeldig request body");
+                return error.toString();
             }
 
             System.out.println("[IN] Vraag: " + vraag);
@@ -46,17 +50,27 @@ public class AiServer {
             String antwoord;
             try {
                 antwoord = ai.sendMessage(vraag);
-                if (antwoord == null || antwoord.isBlank()) antwoord = "Sorry, ik weet hier geen antwoord op.";
+
+                if (antwoord == null || antwoord.isBlank()) {
+                    antwoord = "Sorry, ik weet hier geen antwoord op.";
+                }
+
                 System.out.println("[OUT] Antwoord: " + antwoord);
             } catch (Exception e) {
                 e.printStackTrace();
                 res.status(500);
-                return "{ \"error\": \"AI error\" }";
+                JsonObject error = new JsonObject();
+                error.addProperty("error", "AI error");
+                return error.toString();
             }
 
-            return "{ \"answer\": \"" + antwoord.replace("\"", "\\\"") + "\" }";
+            // JSON-response veilig genereren
+            JsonObject jsonResponse = new JsonObject();
+            jsonResponse.addProperty("answer", antwoord);
+            return jsonResponse.toString();
         });
 
+        // Test endpoint
         get("/", (req, res) -> "Cortech AI backend draait ✅");
 
         System.out.println("Cortech AI Server draait op poort " + portNumber);
