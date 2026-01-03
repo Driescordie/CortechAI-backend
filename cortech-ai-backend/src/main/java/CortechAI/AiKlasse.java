@@ -26,13 +26,11 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
-        // Nieuw OpenAI JSON-formaat
+        // Nieuw OpenAI Responses-formaat
         String json = """
                 {
                     "model": "gpt-4o-mini",
-                    "messages": [
-                        { "role": "user", "content": "%s" }
-                    ]
+                    "input": "%s"
                 }
                 """.formatted(message);
 
@@ -51,10 +49,14 @@ public class AiKlasse {
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // Nieuwe OpenAI output structuur
+        // Check of OpenAI output teruggeeft
+        if (!root.has("output_text")) {
+            return "OpenAI gaf geen output terug: " + response.body();
+        }
+
         JsonArray outputArray = root.getAsJsonArray("output_text");
         if (outputArray == null || outputArray.isEmpty()) {
-            return "Fout: geen output ontvangen van OpenAI.";
+            return "OpenAI gaf een lege output terug.";
         }
 
         return outputArray.get(0).getAsString();
