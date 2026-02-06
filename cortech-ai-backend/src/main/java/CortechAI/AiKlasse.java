@@ -24,31 +24,16 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
+        // Maak JSON payload voor de nieuwe Responses API
         String json = """
-                {
-                  "model": "gpt-4.1",
-                  "input": [
-                    {
-                      "role": "system",
-                      "content": [
-                        {
-                          "type": "input_text",
-                          "text": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt."
-                        }
-                      ]
-                    },
-                    {
-                      "role": "user",
-                      "content": [
-                        {
-                          "type": "input_text",
-                          "text": "%s"
-                        }
-                      ]
-                    }
-                  ]
-                }
-                """.formatted(message);
+        {
+          "model": "gpt-4.1",
+          "input": [
+            "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt.",
+            "%s"
+          ]
+        }
+        """.formatted(message);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
@@ -63,28 +48,38 @@ public class AiKlasse {
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // Nieuw formaat
+        // Probeer eerst output_text (shortcut voor simpele antwoorden)
         if (root.has("output_text")) {
             return root.get("output_text").getAsString();
         }
 
-        // Oud formaat
+        // Anders loop door output array
         if (root.has("output")) {
             JsonArray outputArray = root.getAsJsonArray("output");
-            if (!outputArray.isEmpty()) {
-                JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
-                if (firstMessage.has("content")) {
-                    JsonArray contentArray = firstMessage.getAsJsonArray("content");
-                    StringBuilder sb = new StringBuilder();
-                    for (var item : contentArray) {
-                        JsonObject obj = item.getAsJsonObject();
-                        if (obj.has("text")) sb.append(obj.get("text").getAsString());
+            StringBuilder sb = new StringBuilder();
+            for (var item : outputArray) {
+                JsonObject obj = item.getAsJsonObject();
+                if (obj.has("content")) {
+                    JsonArray contentArray = obj.getAsJsonArray("content");
+                    for (var c : contentArray) {
+                        JsonObject contentObj = c.getAsJsonObject();
+                        if (contentObj.has("text")) {
+                            sb.append(contentObj.get("text").getAsString());
+                        }
                     }
-                    return sb.toString();
                 }
             }
+            if (sb.length() > 0) return sb.toString();
         }
 
         return "(Geen antwoord ontvangen van de AI.)";
     }
+
+    // Voor snel testen
+    public static void main(String[] args) throws Exception {
+        AiKlasse ai = new AiKlasse();
+        String antwoord = ai.sendMessage("Wat is het verschil tussen SSD en HDD?");
+        System.out.println("AI antwoord: " + antwoord);
+    }
 }
+
