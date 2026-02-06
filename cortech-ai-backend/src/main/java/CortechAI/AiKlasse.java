@@ -30,7 +30,7 @@ public class AiKlasse {
                   "messages": [
                     {
                       "role": "system",
-                      "content": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt. Geef altijd praktische en duidelijke oplossingen."
+                      "content": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt."
                     },
                     {
                       "role": "user",
@@ -49,66 +49,43 @@ public class AiKlasse {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-   
+        // RAW logging
         System.out.println("[RAW OPENAI RESPONSE] " + response.body());
+
+        // Als het geen JSON is → foutmelding teruggeven
+        if (!response.body().trim().startsWith("{")) {
+            return "OpenAI stuurde geen geldige JSON terug. Mogelijke oorzaak: verkeerde API key of modelnaam.";
+        }
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-    
+        // Error van OpenAI
+        if (root.has("error")) {
+            return "OpenAI fout: " + root.getAsJsonObject("error").get("message").getAsString();
+        }
+
+        // Nieuw formaat
         if (root.has("output_text")) {
             return root.get("output_text").getAsString();
         }
 
-      
+        // Oud formaat
         if (root.has("output")) {
             JsonArray outputArray = root.getAsJsonArray("output");
             if (!outputArray.isEmpty()) {
                 JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
-
                 if (firstMessage.has("content")) {
                     JsonArray contentArray = firstMessage.getAsJsonArray("content");
-                    StringBuilder fullText = new StringBuilder();
-
-                    for (int i = 0; i < contentArray.size(); i++) {
-                        JsonObject contentItem = contentArray.get(i).getAsJsonObject();
-                        if (contentItem.has("text")) {
-                            fullText.append(contentItem.get("text").getAsString());
-                            if (i < contentArray.size() - 1) {
-                                fullText.append("\n");
-                            }
-                        }
+                    StringBuilder sb = new StringBuilder();
+                    for (var item : contentArray) {
+                        JsonObject obj = item.getAsJsonObject();
+                        if (obj.has("text")) sb.append(obj.get("text").getAsString());
                     }
-
-                    if (!fullText.isEmpty()) {
-                        return fullText.toString();
-                    }
+                    return sb.toString();
                 }
             }
         }
 
         return "(Geen antwoord ontvangen van de AI.)";
-    }
-
-    public static void main(String[] args) throws Exception {
-        AiKlasse ai = new AiKlasse();
-        java.util.Scanner scanner = new java.util.Scanner(System.in);
-
-        System.out.println("Cortech AI gestart. Typ 'stop' om te stoppen.");
-
-        while (true) {
-            System.out.print("\nJij: ");
-            String vraag = scanner.nextLine();
-
-            if (vraag.equalsIgnoreCase("stop")) break;
-
-            try {
-                String antwoord = ai.sendMessage(vraag);
-                System.out.println("Cortech: " + antwoord);
-            } catch (Exception e) {
-                System.out.println("Er ging iets mis: " + e.getMessage());
-            }
-        }
-
-        scanner.close();
     }
 }
