@@ -52,32 +52,40 @@ public class AiKlasse {
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // Output valideren
-        if (!root.has("output") || root.getAsJsonArray("output").isEmpty()) {
-            return "(Geen antwoord ontvangen van de AI.)";
+        // 1. Nieuw formaat: output_text
+        if (root.has("output_text")) {
+            return root.get("output_text").getAsString();
         }
 
-        JsonArray outputArray = root.getAsJsonArray("output");
-        JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
+        // 2. Oud formaat: output -> content -> text
+        if (root.has("output")) {
+            JsonArray outputArray = root.getAsJsonArray("output");
+            if (!outputArray.isEmpty()) {
+                JsonObject firstMessage = outputArray.get(0).getAsJsonObject();
 
-        if (!firstMessage.has("content") || firstMessage.getAsJsonArray("content").isEmpty()) {
-            return "(Geen antwoord ontvangen van de AI.)";
-        }
+                if (firstMessage.has("content")) {
+                    JsonArray contentArray = firstMessage.getAsJsonArray("content");
+                    StringBuilder fullText = new StringBuilder();
 
-        JsonArray contentArray = firstMessage.getAsJsonArray("content");
-        StringBuilder fullText = new StringBuilder();
+                    for (int i = 0; i < contentArray.size(); i++) {
+                        JsonObject contentItem = contentArray.get(i).getAsJsonObject();
+                        if (contentItem.has("text")) {
+                            fullText.append(contentItem.get("text").getAsString());
+                            if (i < contentArray.size() - 1) {
+                                fullText.append("\n");
+                            }
+                        }
+                    }
 
-        for (int i = 0; i < contentArray.size(); i++) {
-            JsonObject contentItem = contentArray.get(i).getAsJsonObject();
-            if (contentItem.has("text")) {
-                fullText.append(contentItem.get("text").getAsString());
-                if (i < contentArray.size() - 1) {
-                    fullText.append("\n");
+                    if (!fullText.isEmpty()) {
+                        return fullText.toString();
+                    }
                 }
             }
         }
 
-        return fullText.toString();
+        // 3. Geen bruikbare output
+        return "(Geen antwoord ontvangen van de AI.)";
     }
 
     // Console test
