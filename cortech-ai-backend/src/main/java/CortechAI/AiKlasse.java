@@ -22,7 +22,6 @@ public class AiKlasse {
         this.client = HttpClient.newHttpClient();
     }
 
-    // Stuurt een bericht naar de AI en geeft het antwoord terug
     public String sendMessage(String message) throws Exception {
 
         String json = """
@@ -50,14 +49,17 @@ public class AiKlasse {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+   
+        System.out.println("[RAW OPENAI RESPONSE] " + response.body());
+
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // 1. Nieuw formaat: output_text
+    
         if (root.has("output_text")) {
             return root.get("output_text").getAsString();
         }
 
-        // 2. Oud formaat: output -> content -> text
+      
         if (root.has("output")) {
             JsonArray outputArray = root.getAsJsonArray("output");
             if (!outputArray.isEmpty()) {
@@ -84,11 +86,9 @@ public class AiKlasse {
             }
         }
 
-        // 3. Geen bruikbare output
         return "(Geen antwoord ontvangen van de AI.)";
     }
 
-    // Console test
     public static void main(String[] args) throws Exception {
         AiKlasse ai = new AiKlasse();
         java.util.Scanner scanner = new java.util.Scanner(System.in);
