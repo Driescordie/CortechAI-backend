@@ -1,4 +1,4 @@
-package CortechAi;
+package CortechAI;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -96,3 +96,4 @@ public class AiKlasse {
         System.out.println("AI antwoord: " + antwoord);
     }
 }
+
