@@ -27,14 +27,24 @@ public class AiKlasse {
         String json = """
                 {
                   "model": "gpt-4.1",
-                  "messages": [
+                  "input": [
                     {
                       "role": "system",
-                      "content": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt."
+                      "content": [
+                        {
+                          "type": "input_text",
+                          "text": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt."
+                        }
+                      ]
                     },
                     {
                       "role": "user",
-                      "content": "%s"
+                      "content": [
+                        {
+                          "type": "input_text",
+                          "text": "%s"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -49,20 +59,9 @@ public class AiKlasse {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // RAW logging
         System.out.println("[RAW OPENAI RESPONSE] " + response.body());
 
-        // Als het geen JSON is → foutmelding teruggeven
-        if (!response.body().trim().startsWith("{")) {
-            return "OpenAI stuurde geen geldige JSON terug. Mogelijke oorzaak: verkeerde API key of modelnaam.";
-        }
-
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
-
-        // Error van OpenAI
-        if (root.has("error")) {
-            return "OpenAI fout: " + root.getAsJsonObject("error").get("message").getAsString();
-        }
 
         // Nieuw formaat
         if (root.has("output_text")) {
