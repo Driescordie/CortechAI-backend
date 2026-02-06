@@ -26,7 +26,7 @@ public class AiKlasse {
     public String sendMessage(String message) throws Exception {
         String json = """
                 {
-                  "model": "gpt-4o-mini",
+                  "model": "gpt‑4.1",
                   "input": [
                     {
                       "role": "system",
@@ -104,3 +104,4 @@ public class AiKlasse {
         scanner.close();
     }
 }
+
