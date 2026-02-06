@@ -1,4 +1,4 @@
-package CortechAI;
+package CortechAi;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -10,6 +10,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class AiKlasse {
+
+    // Enjoy the code boyssssss
 
     private final String apiKey;
     private final HttpClient client;
@@ -24,16 +26,28 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
-        // Maak JSON payload voor de nieuwe Responses API
+        
         String json = """
         {
           "model": "gpt-4.1",
           "input": [
-            "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt.",
-            "%s"
+            {
+              "role": "system",
+              "content": [
+                {"type": "input_text", "text": "Je bent Cortech AI, een behulpzame assistent die vragen over computers, software en technologie beantwoordt."}
+              ]
+            },
+            {
+              "role": "user",
+              "content": [
+                {"type": "input_text", "text": "%s"}
+              ]
+            }
           ]
         }
         """.formatted(message);
+
+        System.out.println("[JSON VOOR VERSTUREN] " + json);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
@@ -48,12 +62,12 @@ public class AiKlasse {
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        // Probeer eerst output_text (shortcut voor simpele antwoorden)
+    
         if (root.has("output_text")) {
             return root.get("output_text").getAsString();
         }
 
-        // Anders loop door output array
+        
         if (root.has("output")) {
             JsonArray outputArray = root.getAsJsonArray("output");
             StringBuilder sb = new StringBuilder();
@@ -75,11 +89,10 @@ public class AiKlasse {
         return "(Geen antwoord ontvangen van de AI.)";
     }
 
-    // Voor snel testen
+  
     public static void main(String[] args) throws Exception {
         AiKlasse ai = new AiKlasse();
         String antwoord = ai.sendMessage("Wat is het verschil tussen SSD en HDD?");
         System.out.println("AI antwoord: " + antwoord);
     }
 }
-
