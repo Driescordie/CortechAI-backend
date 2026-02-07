@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 
 public class AiKlasse {
 
-    //Enjoy the code boyssss
+    // Enjoy the code boyssss
 
     private final String apiKey;
     private final HttpClient client;
@@ -28,7 +28,7 @@ public class AiKlasse {
 
         String json = """
         {
-          "model": "gpt-5-mini",
+          "model": "gpt-4.1-mini",
           "input": [
             {
               "role": "system",
@@ -61,7 +61,7 @@ public class AiKlasse {
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-        
+  
         if (root.has("output_text")) {
             return root.get("output_text").getAsString();
         }
