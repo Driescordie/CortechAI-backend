@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 
 public class AiKlasse {
 
-    // Enjoy the code boyssssss
+    //Enjoy the code boyssss
 
     private final String apiKey;
     private final HttpClient client;
@@ -26,10 +26,9 @@ public class AiKlasse {
 
     public String sendMessage(String message) throws Exception {
 
-        
         String json = """
         {
-          "model": "gpt-4.1",
+          "model": "gpt-5-mini",
           "input": [
             {
               "role": "system",
@@ -62,12 +61,12 @@ public class AiKlasse {
 
         JsonObject root = JsonParser.parseString(response.body()).getAsJsonObject();
 
-    
+        
         if (root.has("output_text")) {
             return root.get("output_text").getAsString();
         }
 
-        
+       
         if (root.has("output")) {
             JsonArray outputArray = root.getAsJsonArray("output");
             StringBuilder sb = new StringBuilder();
@@ -89,11 +88,9 @@ public class AiKlasse {
         return "(Geen antwoord ontvangen van de AI.)";
     }
 
-  
     public static void main(String[] args) throws Exception {
         AiKlasse ai = new AiKlasse();
         String antwoord = ai.sendMessage("Wat is het verschil tussen SSD en HDD?");
         System.out.println("AI antwoord: " + antwoord);
     }
 }
-
